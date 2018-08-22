@@ -1,0 +1,37 @@
+/usr/src/linux-headers-4.8.0-36/include/linux
+
+
+#define list_entry(ptr, type, member) \
+	container_of(ptr, type, member)
+	
+
+#define container_of(ptr, type, member) ({			\
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+	
+#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
+
+
+以上得到
+#define list_entry(ptr, type, member) 
+	(
+		{			
+			const typeof( ((type *)0)->member ) *__mptr = (ptr);	
+			(type *)( (char *)__mptr - ((size_t)&((type *)0)->member) );
+		}
+	)
+
+最终
+#define list_entry(ptr, type, member) 
+	(type *)( (char *)ptr - ((size_t)&((type *)0)->member) );
+	
+大结构体地址为p，大结构类型为type，大结构体的变量名为big_struct
+内嵌链表地址为ptr，内嵌链表名称为alist，位移量为offset
+公式：offset = ptr - p
+1. ptr = （（&big_struct）->alist ）- &big_struct
+2. 假设&big_struct = x
+3. 则offset = x + offset - x，所以x的值无关紧要，于是设置为0
+4. offset = (&(0))->alist - (&(0))
+5. 其中0需要进行地址变换
+6. offset = (&(type*)0)->alist - (&(type*)0)
+
